@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASABI – Quick Assessment</title>
+<style>
+  :root {
+    --primary: #2c6e49;
+    --primary-dark: #1a4731;
+    --accent: #f4a623;
+    --bg: #faf7f2;
+    --card: #ffffff;
+    --text: #2d2d2d;
+    --muted: #6b6b6b;
+    --border: #e0d9cf;
+    --stage1: #2c6e49;
+    --stage2: #1a5fa8;
+    --top: #2c6e49;
+    --bottom: #c0392b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--primary-dark);
+    color: #fff;
+    text-align: center;
+    padding: 20px 20px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  header h1 { font-size: clamp(1rem, 4vw, 1.45rem); font-weight: 700; letter-spacing: 0.4px; }
+
+  .stage-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 99px;
+    margin-top: 6px;
+    margin-bottom: 2px;
+  }
+
+  .stage-badge.s1 { background: rgba(255,255,255,0.18); color: #fff; }
+  .stage-badge.s2 { background: var(--accent); color: #1a1a1a; }
+
+  .progress-bar-wrap {
+    background: rgba(255,255,255,0.2);
+    border-radius: 99px;
+    height: 6px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 99px;
+    transition: width 0.35s ease;
+    width: 0%;
+  }
+
+  .progress-label { font-size: 0.7rem; opacity: 0.75; margin-top: 4px; }
+
+  /* ── MAIN ── */
+  main { max-width: 760px; margin: 0 auto; padding: 20px 16px 100px; }
+
+  .intro-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 24px;
+    border-left: 5px solid var(--accent);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .intro-card h2 { font-size: 1.05rem; color: var(--primary-dark); margin-bottom: 8px; }
+  .intro-card p  { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+  .intro-card p + p { margin-top: 8px; }
+
+  /* ── TRANSITION SCREEN ── */
+  #transition {
+    display: none;
+    max-width: 560px;
+    margin: 60px auto;
+    padding: 0 16px;
+    text-align: center;
+  }
+
+  .transition-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 40px 32px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+
+  .spinner {
+    width: 52px; height: 52px;
+    border: 5px solid #e0e0e0;
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+    margin: 0 auto 20px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .transition-card h2 { font-size: 1.25rem; color: var(--primary-dark); margin-bottom: 10px; }
+  .transition-card p  { font-size: 0.9rem; color: var(--muted); line-height: 1.55; }
+
+  .finalist-list {
+    list-style: none;
+    margin: 20px 0 0;
+    text-align: left;
+  }
+
+  .finalist-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #f4f9f6;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--primary-dark);
+    border-left: 4px solid var(--primary);
+  }
+
+  .finalist-list .rank-num {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    min-width: 20px;
+  }
+
+  .btn-continue {
+    display: inline-block;
+    margin-top: 24px;
+    background: var(--stage2);
+    color: #fff;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 99px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(26,95,168,0.35);
+    transition: background 0.2s, transform 0.15s;
+  }
+
+  .btn-continue:hover { background: #154d8a; transform: translateY(-1px); }
+
+  /* ── QUESTION CARDS ── */
+  .question-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+  }
+
+  .question-card.answered { border-color: var(--primary); }
+  .question-card.stage2-card { border-color: #b3d0ee; }
+  .question-card.stage2-card.answered { border-color: var(--stage2); }
+
+  .q-animal {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--primary);
+    margin-bottom: 5px;
+  }
+
+  .stage2-card .q-animal { color: var(--stage2); }
+
+  .q-text { font-size: 0.93rem; font-weight: 600; color: var(--text); margin-bottom: 16px; line-height: 1.45; }
+
+  .slider-row { display: flex; align-items: center; gap: 10px; }
+
+  .extreme { font-size: 0.77rem; color: var(--muted); line-height: 1.35; flex: 1; }
+  .extreme.left  { text-align: right; }
+  .extreme.right { text-align: left; }
+
+  .slider-wrap { flex: 0 0 140px; display: flex; flex-direction: column; align-items: center; }
+
+  input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 6px; border-radius: 99px;
+    background: linear-gradient(to right, #ddd 0%, #ddd 100%);
+    outline: none; cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--primary);
+    border: 3px solid #fff;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.25);
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  .stage2-card input[type=range]::-webkit-slider-thumb { background: var(--stage2); }
+
+  input[type=range]::-moz-range-thumb {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--primary); border: 3px solid #fff;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.25); cursor: pointer;
+  }
+
+  input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
+
+  .dot-row { display: flex; justify-content: space-between; width: 100%; margin-top: 4px; padding: 0 2px; }
+  .dot { width: 4px; height: 4px; border-radius: 50%; background: #ccc; }
+
+  /* ── SUBMIT ── */
+  .submit-wrap { text-align: center; margin-top: 28px; }
+
+  .btn-submit {
+    background: var(--primary);
+    color: #fff; border: none;
+    padding: 16px 48px; border-radius: 99px;
+    font-size: 1.05rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(44,110,73,0.35);
+    transition: background 0.2s, transform 0.15s;
+  }
+
+  .btn-submit.s2 { background: var(--stage2); box-shadow: 0 4px 16px rgba(26,95,168,0.35); }
+  .btn-submit:hover { filter: brightness(0.9); transform: translateY(-1px); }
+
+  /* ── RESULTS ── */
+  #results {
+    display: none;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 20px 16px 60px;
+  }
+
+  .results-header {
+    background: var(--primary-dark);
+    color: #fff;
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .results-header h2 { font-size: 1.4rem; margin-bottom: 4px; }
+  .results-header p  { opacity: 0.8; font-size: 0.88rem; }
+
+  /* TOP ANIMAL HERO */
+  .hero-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-align: center;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(44,110,73,0.15);
+    border: 2px solid var(--primary);
+  }
+
+  .hero-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+
+  .hero-animal {
+    font-size: clamp(1.8rem, 6vw, 2.4rem);
+    font-weight: 900;
+    color: var(--primary-dark);
+    margin-bottom: 8px;
+  }
+
+  .hero-sig {
+    font-size: 1rem;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 20px;
+    font-style: italic;
+  }
+
+  .hero-score-wrap { display: flex; align-items: center; gap: 12px; max-width: 360px; margin: 0 auto; }
+  .hero-score-bar-bg { flex: 1; height: 12px; border-radius: 99px; background: #e8f5ee; overflow: hidden; }
+  .hero-score-bar-fill { height: 100%; border-radius: 99px; background: var(--primary); transition: width 1.2s ease; }
+  .hero-pct { font-size: 1.3rem; font-weight: 900; color: var(--primary); min-width: 52px; text-align: right; }
+
+  /* RANKED LIST */
+  .ranked-section h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+    padding-left: 4px;
+  }
+
+  .rank-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--card);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    border: 1px solid var(--border);
+  }
+
+  .rank-row.rank-1 { border-color: var(--primary); border-width: 2px; }
+
+  .rank-num {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--muted);
+    min-width: 26px;
+    text-align: center;
+  }
+
+  .rank-row.rank-1 .rank-num { color: var(--primary); font-size: 1.1rem; }
+
+  .rank-info { flex: 1; }
+  .rank-name { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+  .rank-bar-bg { height: 5px; border-radius: 99px; background: #eee; margin-top: 4px; overflow: hidden; }
+  .rank-bar-fill { height: 100%; border-radius: 99px; background: var(--primary); transition: width 1s ease; }
+  .rank-pct { font-size: 0.85rem; font-weight: 700; color: var(--muted); min-width: 40px; text-align: right; }
+
+  .btn-retake {
+    display: block; margin: 32px auto 0;
+    background: var(--accent); color: #fff;
+    border: none; padding: 14px 40px; border-radius: 99px;
+    font-size: 1rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(244,166,35,0.4);
+    transition: background 0.2s, transform 0.15s;
+  }
+
+  .btn-retake:hover { background: #d4891a; transform: translateY(-1px); }
+
+  @media (max-width: 540px) {
+    .slider-row { flex-direction: column; gap: 12px; }
+    .extreme { text-align: center !important; }
+    .slider-wrap { flex: 0 0 auto; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header id="app-header">
+  <h1>African Safari Animal Behavioural Index</h1>
+  <div class="stage-badge s1" id="stage-badge">Stage 1 of 2 — Quick Scan</div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+  <div class="progress-label" id="progress-label">0 of 24 questions answered</div>
+</header>
+
+<!-- STAGE 1 -->
+<main id="stage1-main">
+  <div class="intro-card">
+    <h2>Stage 1 — Quick Scan (24 questions)</h2>
+    <p>For each statement, move the slider to indicate how you typically behave at work. The left end represents one style; the right end represents another. There are no right or wrong answers.</p>
+    <p>This stage identifies your strongest behavioural patterns. A focused second stage will then confirm your top animal.</p>
+  </div>
+  <div id="s1-container"></div>
+  <div class="submit-wrap">
+    <button class="btn-submit" onclick="submitStage1()">Analyse My Responses →</button>
+  </div>
+</main>
+
+<!-- TRANSITION -->
+<div id="transition">
+  <div class="transition-card">
+    <div class="spinner" id="spinner"></div>
+    <h2 id="transition-title">Analysing your responses…</h2>
+    <p id="transition-desc">Identifying your strongest behavioural patterns across all 24 animals.</p>
+    <ul class="finalist-list" id="finalist-list" style="display:none"></ul>
+    <button class="btn-continue" id="btn-continue" style="display:none" onclick="startStage2()">
+      Begin Deep Dive →
+    </button>
+  </div>
+</div>
+
+<!-- STAGE 2 -->
+<main id="stage2-main" style="display:none">
+  <div class="intro-card" style="border-left-color: #1a5fa8">
+    <h2 style="color:#1a4731">Stage 2 — Deep Dive (12 questions)</h2>
+    <p>Based on your Stage 1 responses, we're now focusing on your top 6 animals. Answer these 12 questions to confirm your dominant behavioural style.</p>
+  </div>
+  <div id="s2-container"></div>
+  <div class="submit-wrap">
+    <button class="btn-submit s2" onclick="submitStage2()">View My Results →</button>
+  </div>
+</main>
+
+<!-- RESULTS -->
+<div id="results"></div>
+
+<script>
+const ANIMALS = [
+  {
+    name: "Aardvark",
+    sig: "Uncovers deeper understanding through curiosity and careful investigation.",
+    q1: { text: "When beginning a complex piece of work, I naturally…", left: "Work with the information already available", right: "Keep investigating until I understand what others may have missed" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping move the work forward", right: "Helping others gain deeper insight before moving forward" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Helps work progress through dependable contribution", right: "Helps others discover insights they would otherwise have missed" }
+  },
+  {
+    name: "Antelope",
+    sig: "Navigates change with awareness, agility and purposeful adaptability.",
+    q1: { text: "When circumstances begin to change, I naturally…", left: "Continue with the original plan", right: "Adjust my approach as new information emerges" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Providing consistency during change", right: "Helping others adapt confidently to changing circumstances" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Provides steady support", right: "Helps people navigate change with confidence" }
+  },
+  {
+    name: "Buffalo",
+    sig: "Creates confidence through calm, stability and strategic perspective.",
+    q1: { text: "When situations become pressured, I naturally…", left: "Respond to the immediate demands", right: "Remain calm while considering the wider situation" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping maintain progress", right: "Providing stability and perspective during difficult situations" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Provides reliable support", right: "Creates confidence through calm leadership" }
+  },
+  {
+    name: "Cheetah",
+    sig: "Creates momentum through speed, focus and decisive execution.",
+    q1: { text: "When opportunities arise, I naturally…", left: "Take time to fully evaluate them", right: "Move quickly to turn them into action" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping work remain consistent", right: "Creating momentum that keeps everyone moving" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Delivers dependable results", right: "Delivers results with energy, speed and focus" }
+  },
+  {
+    name: "Eagle",
+    sig: "Provides direction through vision, perspective and strategic thinking.",
+    q1: { text: "When planning for the future, I naturally…", left: "Concentrate on today's priorities", right: "Focus on where we need to be in the future" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping solve immediate challenges", right: "Providing strategic direction and long-term perspective" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Provides thoughtful guidance", right: "Inspires confidence through clear direction and vision" }
+  },
+  {
+    name: "Elephant",
+    sig: "Builds lasting success through wisdom, stewardship and developing others.",
+    q1: { text: "When making important decisions, I naturally…", left: "Focus on achieving today's objectives", right: "Consider how today's decisions will shape the future" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping people achieve today's goals", right: "Protecting the long-term wellbeing of the team" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Provides dependable support", right: "Builds trust through integrity, wisdom and stewardship" }
+  },
+  {
+    name: "Flightless Dung Beetle",
+    sig: "Creates lasting value by improving systems others overlook.",
+    q1: { text: "When I notice recurring problems, I naturally…", left: "Solve the immediate issue", right: "Look for ways to improve the system behind the issue" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping complete the work", right: "Creating systems that make future work easier" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Solves practical problems", right: "Leaves systems stronger than they found them" }
+  },
+  {
+    name: "Giraffe",
+    sig: "Creates direction through vision, perspective and possibility.",
+    q1: { text: "When planning for the future, I naturally…", left: "Focus on today's priorities", right: "Look well beyond today's challenges" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping clarify today's priorities", right: "Helping people see where we are heading" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Provides practical guidance", right: "Inspires confidence through long-term vision" }
+  },
+  {
+    name: "Hadeda",
+    sig: "Keeps people connected through awareness, communication and timely action.",
+    q1: { text: "When I notice something important, I naturally…", left: "Wait until I have complete certainty", right: "Alert others as soon as I believe they need to know" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping people stay informed", right: "Helping people remain aware of important developments" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Shares useful information", right: "Helps ensure important issues are never overlooked" }
+  },
+  {
+    name: "Honey Badger",
+    sig: "Creates progress through courage, resilience and fearless action.",
+    q1: { text: "When facing significant challenges, I naturally…", left: "Look for another way around them", right: "Confront them directly" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping people remain steady", right: "Helping people face challenges they would otherwise avoid" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Remains dependable during difficult situations", right: "Demonstrates courage when others hesitate" }
+  },
+  {
+    name: "Honeybee",
+    sig: "Creates success by connecting people, ideas and shared purpose.",
+    q1: { text: "When working on important projects, I naturally…", left: "Focus on completing my own responsibilities well", right: "Bring people together around a shared goal" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Providing reliable support", right: "Building stronger collaboration across the team" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Provides dependable support", right: "Creates an environment where people succeed together" }
+  },
+  {
+    name: "Hyena",
+    sig: "Creates opportunity through adaptability, resourcefulness and resilience.",
+    q1: { text: "When circumstances change unexpectedly, I naturally…", left: "Work with the resources already available", right: "Adapt quickly and find new ways forward" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping people remain focused on the work", right: "Helping people stay resilient and positive during challenges" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Helps teams keep moving forward", right: "Helps teams turn difficult situations into opportunities" }
+  },
+  {
+    name: "Kingfisher",
+    sig: "Delivers exceptional results through focus, timing and precision.",
+    q1: { text: "When opportunities arise, I naturally…", left: "Wait until the timing becomes clearer", right: "Act decisively when the timing feels right" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping people maintain steady progress", right: "Helping people focus on what matters most" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Produces dependable work", right: "Produces outstanding results through focus and precision" }
+  },
+  {
+    name: "Leopard",
+    sig: "Navigates complexity through strategy, adaptability and quiet confidence.",
+    q1: { text: "When facing complex challenges, I naturally…", left: "Address the immediate issue", right: "Look for the most strategic way forward" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping work remain steady", right: "Providing resourceful solutions during difficult situations" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Delivers dependable outcomes", right: "Finds thoughtful solutions that make a meaningful difference" }
+  },
+  {
+    name: "Lion",
+    sig: "Creates direction through courageous leadership and confident action.",
+    q1: { text: "When a team needs direction, I naturally…", left: "Help people organise the work", right: "Bring people together around a shared vision" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping people stay focused", right: "Providing confidence, direction and encouragement" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Provides dependable leadership", right: "Inspires confidence through courage and presence" }
+  },
+  {
+    name: "Meerkat",
+    sig: "Protects the team through awareness, communication and coordination.",
+    q1: { text: "When working on important projects, I naturally…", left: "Focus on the task directly in front of me", right: "Maintain awareness of everything happening around me" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping people complete the work", right: "Helping people stay connected, coordinated and prepared" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Supports dependable teamwork", right: "Builds trust through awareness and communication" }
+  },
+  {
+    name: "Ostrich",
+    sig: "Creates possibility through optimism, perspective and future thinking.",
+    q1: { text: "When planning ahead, I naturally…", left: "Concentrate on today's priorities", right: "Look beyond today's challenges to future opportunities" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping people maintain progress", right: "Bringing optimism and fresh ideas" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Provides practical encouragement", right: "Inspires people to believe more is possible" }
+  },
+  {
+    name: "Owl",
+    sig: "Provides wisdom through insight, objectivity and thoughtful judgement.",
+    q1: { text: "When analysing a situation, I naturally…", left: "Work with the information immediately available", right: "Look for insights others may have overlooked" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping people make steady progress", right: "Providing clarity through thoughtful analysis" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Provides thoughtful advice", right: "Provides wise judgement that helps the team make better decisions" }
+  },
+  {
+    name: "Rhino",
+    sig: "Creates stability through strength, protection and unwavering commitment.",
+    q1: { text: "When significant obstacles stand in the way, I naturally…", left: "Work steadily around them", right: "Push through them to create progress" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping people maintain progress", right: "Providing strength, protection and dependable leadership" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Provides dependable support", right: "Creates confidence through strength and stability" }
+  },
+  {
+    name: "Termite",
+    sig: "Builds lasting success through systems, collaboration and consistent execution.",
+    q1: { text: "When improving the way work is done, I naturally…", left: "Focus on completing today's tasks well", right: "Build systems that strengthen future work" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping complete important work", right: "Creating structure that helps everyone succeed" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Helps work become more efficient", right: "Creates sustainable systems that leave a lasting impact" }
+  },
+  {
+    name: "Vulture",
+    sig: "Creates value through perspective, timing and seeing opportunities others miss.",
+    q1: { text: "When others overlook something, I naturally…", left: "Move on to the next priority", right: "Look for the value hidden within it" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping work move forward efficiently", right: "Providing perspective that creates balance" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Provides dependable service", right: "Raises standards through thoughtful perspective" }
+  },
+  {
+    name: "Warthog",
+    sig: "Builds resilience through optimism, humour and loyal support.",
+    q1: { text: "When situations become difficult, I naturally…", left: "Focus on solving the problem immediately", right: "Help people stay positive while solving the problem" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping people complete their work", right: "Building team spirit through humour and loyalty" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Provides dependable encouragement", right: "Turns difficult situations into shared successes" }
+  },
+  {
+    name: "Wildebeest",
+    sig: "Generates momentum through energy, urgency and forward movement.",
+    q1: { text: "When progress slows, I naturally…", left: "Wait until the team is ready to continue", right: "Generate energy that helps everyone move forward" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping maintain steady progress", right: "Bringing energy when motivation begins to fade" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Helps work get completed", right: "Creates energy that inspires people into action" }
+  },
+  {
+    name: "Zebra",
+    sig: "Creates balance through awareness, adaptability and authentic individuality.",
+    q1: { text: "When working with different people, I naturally…", left: "Adapt to the situation without drawing attention", right: "Know when to stand out and when to blend in" },
+    q4: { text: "When supporting a team, I naturally contribute by…", left: "Helping people work together consistently", right: "Bringing individuality while strengthening team harmony" },
+    q6: { text: "When others work with me, they are most likely to experience someone who…", left: "Provides dependable consistency", right: "Creates balance through awareness and authentic individuality" }
+  }
+];
+
+// ── STATE ──
+let s1Questions = [];   // shuffled animal indices for stage 1
+let s2Animals = [];     // top-6 animal indices for stage 2 (shuffled q1/q4 pairs)
+let s1Scores = {};      // animalIndex → score
+let s2Scores = {};      // animalIndex → [q1score, q4score]
+let s2Questions = [];   // [{animalIndex, qKey}]
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ── SLIDER HELPERS ──
+function updateSliderBackground(input, isStage2) {
+  const pct = ((parseFloat(input.value) - 1) / 4) * 100;
+  const colour = isStage2 ? '#1a5fa8' : '#2c6e49';
+  input.style.background = `linear-gradient(to right, ${colour} 0%, ${colour} ${pct}%, #ddd ${pct}%, #ddd 100%)`;
+}
+
+function makeDots() {
+  return `<div class="dot-row">${Array(9).fill('<div class="dot"></div>').join('')}</div>`;
+}
+
+// ── PROGRESS ──
+function updateProgress(answered, total) {
+  const pct = total > 0 ? (answered / total) * 100 : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${answered} of ${total} questions answered`;
+}
+
+// ── STAGE 1 ──
+function buildStage1() {
+  s1Questions = shuffle(ANIMALS.map((_, i) => i));
+  s1Scores = {};
+
+  const container = document.getElementById('s1-container');
+  container.innerHTML = '';
+
+  s1Questions.forEach((ai, idx) => {
+    const animal = ANIMALS[ai];
+    const q = animal.q6;
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.id = `s1card-${idx}`;
+    card.innerHTML = `
+      <div class="q-animal">${animal.name}</div>
+      <div class="q-text">${q.text}</div>
+      <div class="slider-row">
+        <div class="extreme left">${q.left}</div>
+        <div class="slider-wrap">
+          <input type="range" min="1" max="5" step="0.5" value="3"
+            id="s1slider-${idx}" data-ai="${ai}"
+            oninput="onS1Slide(this, ${idx})">
+          ${makeDots()}
+        </div>
+        <div class="extreme right">${q.right}</div>
+      </div>`;
+    container.appendChild(card);
+    updateSliderBackground(card.querySelector('input[type=range]'), false);
+  });
+
+  updateProgress(0, 24);
+}
+
+function onS1Slide(input, idx) {
+  updateSliderBackground(input, false);
+  const ai = parseInt(input.dataset.ai);
+  const val = parseFloat(input.value);
+  const wasAnswered = s1Scores[ai] !== undefined;
+  s1Scores[ai] = val;
+  const card = document.getElementById(`s1card-${idx}`);
+  card.classList.add('answered');
+  if (!wasAnswered) updateProgress(Object.keys(s1Scores).length, 24);
+}
+
+function submitStage1() {
+  // Default untouched sliders to 3
+  ANIMALS.forEach((_, ai) => {
+    if (s1Scores[ai] === undefined) s1Scores[ai] = 3;
+  });
+  showTransition();
+}
+
+// ── TRANSITION ──
+function showTransition() {
+  document.getElementById('stage1-main').style.display = 'none';
+  document.getElementById('transition').style.display = 'block';
+  document.getElementById('app-header').style.display = 'none';
+
+  // Compute top 6 from stage 1
+  const ranked = ANIMALS.map((a, i) => ({ index: i, name: a.name, score: s1Scores[i] || 3 }))
+    .sort((a, b) => b.score - a.score);
+
+  s2Animals = ranked.slice(0, 6).map(r => r.index);
+
+  setTimeout(() => {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('transition-title').textContent = 'Your top 6 finalists identified!';
+    document.getElementById('transition-desc').textContent =
+      'Stage 2 will dive deeper into these 6 animals with 2 targeted questions each to confirm your dominant style.';
+
+    const list = document.getElementById('finalist-list');
+    list.innerHTML = ranked.slice(0, 6).map((r, i) => `
+      <li>
+        <span class="rank-num">#${i + 1}</span>
+        ${r.name}
+      </li>`).join('');
+    list.style.display = 'block';
+    document.getElementById('btn-continue').style.display = 'inline-block';
+  }, 1400);
+}
+
+// ── STAGE 2 ──
+function startStage2() {
+  document.getElementById('transition').style.display = 'none';
+  document.getElementById('app-header').style.display = '';
+
+  const badge = document.getElementById('stage-badge');
+  badge.textContent = 'Stage 2 of 2 — Deep Dive';
+  badge.className = 'stage-badge s2';
+
+  s2Scores = {};
+  // Build question list: q1 and q4 for each of the 6 finalists, shuffled
+  s2Questions = [];
+  s2Animals.forEach(ai => {
+    s2Questions.push({ ai, qKey: 'q1' });
+    s2Questions.push({ ai, qKey: 'q4' });
+  });
+  s2Questions = shuffle(s2Questions);
+
+  const container = document.getElementById('s2-container');
+  container.innerHTML = '';
+
+  s2Questions.forEach((ref, idx) => {
+    const animal = ANIMALS[ref.ai];
+    const q = animal[ref.qKey];
+    const key = `${ref.ai}-${ref.qKey}`;
+    const card = document.createElement('div');
+    card.className = 'question-card stage2-card';
+    card.id = `s2card-${idx}`;
+    card.innerHTML = `
+      <div class="q-animal">${animal.name}</div>
+      <div class="q-text">${q.text}</div>
+      <div class="slider-row">
+        <div class="extreme left">${q.left}</div>
+        <div class="slider-wrap">
+          <input type="range" min="1" max="5" step="0.5" value="3"
+            id="s2slider-${idx}" data-key="${key}"
+            oninput="onS2Slide(this, ${idx})">
+          ${makeDots()}
+        </div>
+        <div class="extreme right">${q.right}</div>
+      </div>`;
+    container.appendChild(card);
+    updateSliderBackground(card.querySelector('input[type=range]'), true);
+  });
+
+  document.getElementById('stage2-main').style.display = '';
+  updateProgress(0, 12);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function onS2Slide(input, idx) {
+  updateSliderBackground(input, true);
+  const key = input.dataset.key;
+  const wasAnswered = s2Scores[key] !== undefined;
+  s2Scores[key] = parseFloat(input.value);
+  const card = document.getElementById(`s2card-${idx}`);
+  card.classList.add('answered');
+  if (!wasAnswered) updateProgress(Object.keys(s2Scores).length, 12);
+}
+
+function submitStage2() {
+  // Default untouched to 3
+  s2Questions.forEach(ref => {
+    const key = `${ref.ai}-${ref.qKey}`;
+    if (s2Scores[key] === undefined) s2Scores[key] = 3;
+  });
+  showResults();
+}
+
+// ── RESULTS ──
+function showResults() {
+  // Combined score: each animal has 1–3 scores
+  // Stage 1 finalists (top 6): q6 + q1 + q4 → average of 3
+  // Other 18 animals: q6 only
+  const finalScores = ANIMALS.map((animal, ai) => {
+    const scores = [s1Scores[ai] || 3];
+    const q1key = `${ai}-q1`;
+    const q4key = `${ai}-q4`;
+    if (s2Scores[q1key] !== undefined) scores.push(s2Scores[q1key]);
+    if (s2Scores[q4key] !== undefined) scores.push(s2Scores[q4key]);
+    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+    return { name: animal.name, sig: animal.sig, avg, isFinalist: s2Animals.includes(ai) };
+  }).sort((a, b) => b.avg - a.avg);
+
+  const top = finalScores[0];
+  const topPct = Math.round(((top.avg - 1) / 4) * 100);
+
+  document.getElementById('stage2-main').style.display = 'none';
+  document.getElementById('app-header').style.display = 'none';
+
+  const resultsEl = document.getElementById('results');
+  resultsEl.style.display = 'block';
+
+  resultsEl.innerHTML = `
+    <div class="results-header">
+      <h2>Your ASABI Result</h2>
+      <p>Adaptive assessment complete — based on 36 targeted questions</p>
+    </div>
+
+    <div class="hero-card">
+      <div class="hero-label">Your Dominant Behavioural Style</div>
+      <div class="hero-animal">${top.name}</div>
+      <div class="hero-sig">"${top.sig}"</div>
+      <div class="hero-score-wrap">
+        <div class="hero-score-bar-bg">
+          <div class="hero-score-bar-fill" style="width:0%" id="hero-bar"></div>
+        </div>
+        <div class="hero-pct">${topPct}%</div>
+      </div>
+    </div>
+
+    <div class="ranked-section">
+      <h3>Full ranking — all 24 animals</h3>
+      ${finalScores.map((item, i) => {
+        const pct = Math.round(((item.avg - 1) / 4) * 100);
+        return `
+          <div class="rank-row ${i === 0 ? 'rank-1' : ''}">
+            <div class="rank-num">${i === 0 ? '🥇' : i + 1}</div>
+            <div class="rank-info">
+              <div class="rank-name">${item.name}${item.isFinalist ? ' ✦' : ''}</div>
+              <div class="rank-bar-bg">
+                <div class="rank-bar-fill" style="width:0%" data-pct="${pct}"></div>
+              </div>
+            </div>
+            <div class="rank-pct">${pct}%</div>
+          </div>`;
+      }).join('')}
+    </div>
+    <p style="font-size:0.75rem;color:#999;text-align:center;margin-top:10px">✦ included in Stage 2 deep dive</p>
+
+    <button class="btn-retake" onclick="retake()">Retake Assessment</button>
+  `;
+
+  setTimeout(() => {
+    document.getElementById('hero-bar').style.width = topPct + '%';
+    resultsEl.querySelectorAll('.rank-bar-fill').forEach(b => {
+      b.style.width = b.dataset.pct + '%';
+    });
+  }, 100);
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── RETAKE ──
+function retake() {
+  s1Scores = {}; s2Scores = {}; s2Animals = []; s2Questions = [];
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('app-header').style.display = '';
+
+  const badge = document.getElementById('stage-badge');
+  badge.textContent = 'Stage 1 of 2 — Quick Scan';
+  badge.className = 'stage-badge s1';
+
+  document.getElementById('stage1-main').style.display = '';
+  buildStage1();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── INIT ──
+buildStage1();
+</script>
+</body>
+</html>
