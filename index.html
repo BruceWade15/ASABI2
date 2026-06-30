@@ -122,33 +122,6 @@
   .transition-card h2 { font-size: 1.25rem; color: var(--primary-dark); margin-bottom: 10px; }
   .transition-card p  { font-size: 0.9rem; color: var(--muted); line-height: 1.55; }
 
-  .finalist-list {
-    list-style: none;
-    margin: 20px 0 0;
-    text-align: left;
-  }
-
-  .finalist-list li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    border-radius: 8px;
-    background: #f4f9f6;
-    margin-bottom: 8px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--primary-dark);
-    border-left: 4px solid var(--primary);
-  }
-
-  .finalist-list .rank-num {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--primary);
-    min-width: 20px;
-  }
-
   .btn-continue {
     display: inline-block;
     margin-top: 24px;
@@ -181,16 +154,14 @@
   .question-card.stage2-card { border-color: #b3d0ee; }
   .question-card.stage2-card.answered { border-color: var(--stage2); }
 
-  .q-animal {
+  .q-num {
     font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: var(--primary);
+    color: var(--muted);
     margin-bottom: 5px;
   }
-
-  .stage2-card .q-animal { color: var(--stage2); }
 
   .q-text { font-size: 0.93rem; font-weight: 600; color: var(--text); margin-bottom: 16px; line-height: 1.45; }
 
@@ -205,25 +176,23 @@
   input[type=range] {
     -webkit-appearance: none; appearance: none;
     width: 100%; height: 6px; border-radius: 99px;
-    background: linear-gradient(to right, #ddd 0%, #ddd 100%);
+    background: #ddd;
     outline: none; cursor: pointer;
   }
 
   input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 22px; height: 22px; border-radius: 50%;
-    background: var(--primary);
+    background: #555;
     border: 3px solid #fff;
     box-shadow: 0 1px 5px rgba(0,0,0,0.25);
     cursor: pointer;
     transition: transform 0.15s;
   }
 
-  .stage2-card input[type=range]::-webkit-slider-thumb { background: var(--stage2); }
-
   input[type=range]::-moz-range-thumb {
     width: 22px; height: 22px; border-radius: 50%;
-    background: var(--primary); border: 3px solid #fff;
+    background: #555; border: 3px solid #fff;
     box-shadow: 0 1px 5px rgba(0,0,0,0.25); cursor: pointer;
   }
 
@@ -604,13 +573,6 @@ function shuffle(arr) {
   return a;
 }
 
-// ── SLIDER HELPERS ──
-function updateSliderBackground(input, isStage2) {
-  const pct = ((parseFloat(input.value) - 1) / 4) * 100;
-  const colour = isStage2 ? '#1a5fa8' : '#2c6e49';
-  input.style.background = `linear-gradient(to right, ${colour} 0%, ${colour} ${pct}%, #ddd ${pct}%, #ddd 100%)`;
-}
-
 function makeDots() {
   return `<div class="dot-row">${Array(9).fill('<div class="dot"></div>').join('')}</div>`;
 }
@@ -637,7 +599,7 @@ function buildStage1() {
     card.className = 'question-card';
     card.id = `s1card-${idx}`;
     card.innerHTML = `
-      <div class="q-animal">${animal.name}</div>
+      <div class="q-num">Question ${idx + 1} of 24</div>
       <div class="q-text">${q.text}</div>
       <div class="slider-row">
         <div class="extreme left">${q.left}</div>
@@ -650,14 +612,12 @@ function buildStage1() {
         <div class="extreme right">${q.right}</div>
       </div>`;
     container.appendChild(card);
-    updateSliderBackground(card.querySelector('input[type=range]'), false);
   });
 
   updateProgress(0, 24);
 }
 
 function onS1Slide(input, idx) {
-  updateSliderBackground(input, false);
   const ai = parseInt(input.dataset.ai);
   const val = parseFloat(input.value);
   const wasAnswered = s1Scores[ai] !== undefined;
@@ -681,27 +641,14 @@ function showTransition() {
   document.getElementById('transition').style.display = 'block';
   document.getElementById('app-header').style.display = 'none';
 
-  // Compute top 6 from stage 1
-  const ranked = ANIMALS.map((a, i) => ({ index: i, name: a.name, score: s1Scores[i] || 3 }))
+  // Compute top 5 from stage 1
+  const ranked = ANIMALS.map((a, i) => ({ index: i, score: s1Scores[i] || 3 }))
     .sort((a, b) => b.score - a.score);
 
-  s2Animals = ranked.slice(0, 6).map(r => r.index);
+  s2Animals = ranked.slice(0, 5).map(r => r.index);
 
-  setTimeout(() => {
-    document.getElementById('spinner').style.display = 'none';
-    document.getElementById('transition-title').textContent = 'Your top 6 finalists identified!';
-    document.getElementById('transition-desc').textContent =
-      'Stage 2 will dive deeper into these 6 animals with 2 targeted questions each to confirm your dominant style.';
-
-    const list = document.getElementById('finalist-list');
-    list.innerHTML = ranked.slice(0, 6).map((r, i) => `
-      <li>
-        <span class="rank-num">#${i + 1}</span>
-        ${r.name}
-      </li>`).join('');
-    list.style.display = 'block';
-    document.getElementById('btn-continue').style.display = 'inline-block';
-  }, 1400);
+  // Auto-advance to stage 2 after brief pause — no finalist reveal
+  setTimeout(() => startStage2(), 1400);
 }
 
 // ── STAGE 2 ──
@@ -733,7 +680,7 @@ function startStage2() {
     card.className = 'question-card stage2-card';
     card.id = `s2card-${idx}`;
     card.innerHTML = `
-      <div class="q-animal">${animal.name}</div>
+      <div class="q-num">Question ${idx + 1} of 10</div>
       <div class="q-text">${q.text}</div>
       <div class="slider-row">
         <div class="extreme left">${q.left}</div>
@@ -746,22 +693,20 @@ function startStage2() {
         <div class="extreme right">${q.right}</div>
       </div>`;
     container.appendChild(card);
-    updateSliderBackground(card.querySelector('input[type=range]'), true);
   });
 
   document.getElementById('stage2-main').style.display = '';
-  updateProgress(0, 12);
+  updateProgress(0, 10);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function onS2Slide(input, idx) {
-  updateSliderBackground(input, true);
   const key = input.dataset.key;
   const wasAnswered = s2Scores[key] !== undefined;
   s2Scores[key] = parseFloat(input.value);
   const card = document.getElementById(`s2card-${idx}`);
   card.classList.add('answered');
-  if (!wasAnswered) updateProgress(Object.keys(s2Scores).length, 12);
+  if (!wasAnswered) updateProgress(Object.keys(s2Scores).length, 10);
 }
 
 function submitStage2() {
@@ -775,9 +720,6 @@ function submitStage2() {
 
 // ── RESULTS ──
 function showResults() {
-  // Combined score: each animal has 1–3 scores
-  // Stage 1 finalists (top 6): q6 + q1 + q4 → average of 3
-  // Other 18 animals: q6 only
   const finalScores = ANIMALS.map((animal, ai) => {
     const scores = [s1Scores[ai] || 3];
     const q1key = `${ai}-q1`;
@@ -785,11 +727,13 @@ function showResults() {
     if (s2Scores[q1key] !== undefined) scores.push(s2Scores[q1key]);
     if (s2Scores[q4key] !== undefined) scores.push(s2Scores[q4key]);
     const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-    return { name: animal.name, sig: animal.sig, avg, isFinalist: s2Animals.includes(ai) };
+    return { name: animal.name, sig: animal.sig, avg };
   }).sort((a, b) => b.avg - a.avg);
 
-  const top = finalScores[0];
+  const top5 = finalScores.slice(0, 5);
+  const top = top5[0];
   const topPct = Math.round(((top.avg - 1) / 4) * 100);
+  const medals = ['🥇','🥈','🥉','4','5'];
 
   document.getElementById('stage2-main').style.display = 'none';
   document.getElementById('app-header').style.display = 'none';
@@ -800,7 +744,7 @@ function showResults() {
   resultsEl.innerHTML = `
     <div class="results-header">
       <h2>Your ASABI Result</h2>
-      <p>Adaptive assessment complete — based on 36 targeted questions</p>
+      <p>Adaptive assessment complete — based on 34 targeted questions</p>
     </div>
 
     <div class="hero-card">
@@ -816,14 +760,14 @@ function showResults() {
     </div>
 
     <div class="ranked-section">
-      <h3>Full ranking — all 24 animals</h3>
-      ${finalScores.map((item, i) => {
+      <h3>Your top 5 behavioural styles</h3>
+      ${top5.map((item, i) => {
         const pct = Math.round(((item.avg - 1) / 4) * 100);
         return `
           <div class="rank-row ${i === 0 ? 'rank-1' : ''}">
-            <div class="rank-num">${i === 0 ? '🥇' : i + 1}</div>
+            <div class="rank-num">${medals[i]}</div>
             <div class="rank-info">
-              <div class="rank-name">${item.name}${item.isFinalist ? ' ✦' : ''}</div>
+              <div class="rank-name">${item.name}</div>
               <div class="rank-bar-bg">
                 <div class="rank-bar-fill" style="width:0%" data-pct="${pct}"></div>
               </div>
@@ -832,7 +776,6 @@ function showResults() {
           </div>`;
       }).join('')}
     </div>
-    <p style="font-size:0.75rem;color:#999;text-align:center;margin-top:10px">✦ included in Stage 2 deep dive</p>
 
     <button class="btn-retake" onclick="retake()">Retake Assessment</button>
   `;
